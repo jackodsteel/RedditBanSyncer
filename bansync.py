@@ -2,6 +2,7 @@
 __author__ = "Jack Steel"
 
 import time
+
 import praw
 from praw.exceptions import APIException
 from praw.models import Message
@@ -58,7 +59,14 @@ class Bot:
                     self.banned_users.add(banned_user)
                     print(list(self.moderated))
                     for sub_to_ban_in in self.moderated:
-                        sub_to_ban_in.banned.add(banned_user, ban_reason=action.description)
+                        try:
+                            sub_to_ban_in.banned.add(banned_user, ban_reason=action.description)
+                        except APIException as e:
+                            if e.error_type == "CANT_RESTRICT_MODERATOR":
+                                print(
+                                    f"Tried to ban {banned_user} but they moderate the subreddit {sub_to_ban_in.display_name}")
+                            else:
+                                raise e
 
     def run(self):
         self.check_for_mod_invites()
