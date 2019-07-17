@@ -14,6 +14,10 @@ CLIENT_SECRET = ""
 
 GLOBAL_BAN_TAG = "#global"
 
+BAN_USER_MESSAGE = """
+You have been banned due to suspected spam. Please contact the moderators if you think this was an error.
+"""
+
 USER_AGENT = "script:nz.co.jacksteel.bansyncer:v0.0.1 (by /u/iPlain)"
 
 
@@ -60,7 +64,8 @@ class Bot:
                     print(list(self.moderated))
                     for sub_to_ban_in in self.moderated:
                         try:
-                            sub_to_ban_in.banned.add(banned_user, ban_reason=action.description)
+                            sub_to_ban_in.banned.add(banned_user, ban_reason=action.description,
+                                                     ban_message=BAN_USER_MESSAGE)
                         except APIException as e:
                             if e.error_type == "CANT_RESTRICT_MODERATOR":
                                 print(
