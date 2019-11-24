@@ -61,21 +61,33 @@ class Bot:
                 if GLOBAL_BAN_TAG in action.description:
                     print(f"Found ban of /u/{banned_user} in {subreddit.display_name} by {action._mod}, banning in other subs")
                     self.banned_users.add(banned_user)
-                    print(list(self.moderated))
                     for sub_to_ban_in in self.moderated:
                         try:
-                            sub_to_ban_in.banned.add(banned_user, ban_reason=action.description,
-                                                     ban_message=BAN_USER_MESSAGE)
+                            sub_to_ban_in.banned.add(banned_user, ban_reason=action.description, ban_message=BAN_USER_MESSAGE)
+                            print(f"Now banned in {sub_to_ban_in.display_name}")
                         except APIException as e:
                             if e.error_type == "CANT_RESTRICT_MODERATOR":
-                                print(
-                                    f"Tried to ban {banned_user} but they moderate the subreddit {sub_to_ban_in.display_name}")
+                                print(f"Tried to ban {banned_user} but they moderate the subreddit {sub_to_ban_in.display_name}")
                             else:
-                                raise e
+                                print(f"Error while banning /u/{banned_user} in {sub_to_ban_in.display_name}")
+                                print(e)
+                        except Exception as e:
+                            print(f"Error while banning /u/{banned_user} in {sub_to_ban_in.display_name}")
+                            print(e)
 
     def run(self):
         self.check_for_mod_invites()
         self.review_ban_lists()
+
+
+def main():
+    while True:
+        try:
+            bot.run()
+            time.sleep(DELAY_BETWEEN_LOOPS_SECONDS)
+        except Exception as e:
+            print("Had an error while running! Will continue but if this keeps happening you should investigate")
+            print(e)
 
 
 if __name__ == "__main__":
@@ -86,7 +98,4 @@ if __name__ == "__main__":
         client_secret=CLIENT_SECRET,
         user_agent=USER_AGENT
     ))
-
-    while True:
-        bot.run()
-        time.sleep(DELAY_BETWEEN_LOOPS_SECONDS)
+    main()
