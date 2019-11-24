@@ -28,8 +28,21 @@ class Bot:
 
     def __init__(self, r):
         self.r = r
-        self.moderated = set(r.user.moderator_subreddits(limit=None))
+        self.moderated = set(filter(self.has_ban_permissions, r.user.moderator_subreddits(limit=None)))
         self.banned_users = set()
+
+    def has_ban_permissions(self, subreddit) -> bool:
+        mod_relationship = subreddit.moderator(self.r.user.me())
+        if len(mod_relationship) != 1:
+            print(f"No ban permissions for /r/{subreddit.display_name}, bans will NOT be synced here")
+            return False
+        mod_permissions = mod_relationship[0].mod_permissions
+        if "all" in mod_permissions or "access" in mod_permissions:
+            print(f"Have ban permissions for /r/{subreddit.display_name}, bans will be synced here")
+            return True
+        else:
+            print(f"No ban permissions for /r/{subreddit.display_name}, bans will NOT be synced here")
+            return False
 
     def check_for_mod_invites(self):
         for message in self.r.inbox.unread(limit=None):
@@ -46,7 +59,8 @@ class Bot:
             try:
                 message.subreddit.mod.accept_invite()
                 print(f"Accepted invite to /r/{message.subreddit.display_name}")
-                self.moderated.add(message.subreddit)
+                if self.has_ban_permissions(message.subreddit):
+                    self.moderated.add(message.subreddit)
             except APIException as e:
                 # Ignore NO_INVITE_FOUND errors, as it just means we got a normal modmail that we'll ignore
                 if e.error_type != "NO_INVITE_FOUND":
