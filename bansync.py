@@ -18,6 +18,8 @@ BAN_USER_MESSAGE = """
 You have been banned due to suspected spam. Please contact the moderators if you think this was an error.
 """
 
+IGNORED_USERNAMES = ["XPMai", "iPlain"]
+
 USER_AGENT = "script:nz.co.jacksteel.bansyncer:v0.0.1 (by /u/iPlain)"
 
 
@@ -71,6 +73,8 @@ class Bot:
             for action in subreddit.mod.log(action="banuser"):
                 banned_user = action.target_author
                 if banned_user in self.banned_users:
+                    continue
+                if banned_user.lower() in map(str.lower, IGNORED_USERNAMES):
                     continue
                 if GLOBAL_BAN_TAG in action.description:
                     print(f"Found ban of /u/{banned_user} in {subreddit.display_name} by {action._mod}, banning in other subs")
